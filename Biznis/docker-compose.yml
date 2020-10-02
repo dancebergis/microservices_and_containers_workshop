@@ -1,0 +1,57 @@
+version: '3.7'
+
+# Set up all services
+services:    
+  vitrina:
+    image: nmaworkshop2020/parduotuve-frontend-vitrina
+    container_name: vitrinos-konteineris
+    ports:
+      - "5000:80"
+    links:
+      - "kainos:sandelys"  
+      
+  kainos:
+    build: ./Kainos
+    container_name: kainu-konteineris
+    environment:
+      - KainuPolitika=1.5
+    
+  # First the AspNet Core app
+  gamykla:
+    ## Get the image to use and set the container name
+    image: biznis-gamykla:latest
+    container_name: gamyklos-konteineris
+
+    # State a dependancy on Redis working
+    depends_on:
+      - "redis_database"
+
+    # Location of the Dockerfile
+    build:
+      context: ./Gamykla
+      dockerfile: Dockerfile
+
+    # Set access ports for localhost on the left
+    ports:
+      - "5999:5999"
+
+    # Configure a link to Redis
+    links:
+      - "redis_database"
+
+    # The Application needs a connection string for Redis, this just needs to be the Redis Service name as defined below
+    # Pass it in as an Environmental Variable
+    environment:
+      - RedisConnection=redis_database
+
+  # The Redis Service, this label is required for the "Links" and Connection string
+  redis_database:
+    # Pull the image from Docker Hub
+    image: redis
+    # Give the container a name (any name you want)
+    container_name: bazes-konteineris
+    volumes:
+      - redis-data:/data
+    
+volumes:
+  redis-data:
